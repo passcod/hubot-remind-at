@@ -26,7 +26,7 @@ class Reminders
     @robot.logger.debug("add id:#{id}")
 
     setTimeout =>
-      @robot.reply reminder.envelope, "@#{reminder.mention} asked me to remind you to #{reminder.action}"
+      @robot.send reminder.envelope, "@#{reminder.mention} asked me to remind you to #{reminder.action}"
       @remove(id)
     , reminder.diff()
 
