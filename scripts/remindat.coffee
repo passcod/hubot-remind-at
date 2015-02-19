@@ -26,7 +26,7 @@ class Reminders
     @robot.logger.debug("add id:#{id}")
 
     setTimeout =>
-      @robot.reply reminder.envelope, "you asked me to remind you to #{reminder.action}"
+      @robot.reply reminder.envelope, "@#{reminder.mention} asked me to remind you to #{reminder.action}"
       @remove(id)
     , reminder.diff()
 
@@ -38,7 +38,7 @@ class Reminders
 
 class ReminderAt
 
-  constructor: (@envelope, @date, @action) ->
+  constructor: (@envelope, @mention, @date, @action) ->
 
   diff: ->
     now = new Date().getTime()
@@ -47,9 +47,10 @@ class ReminderAt
 module.exports = (robot) ->
   reminders = new Reminders robot
 
-  robot.respond /remind me at (.+) to (.*)/i, (msg) ->
-    time = msg.match[1]
-    action = msg.match[2]
+  robot.respond /remind (.+) at (.+) to (.*)/i, (msg) ->
+    mention = msg.match[1]
+    time = msg.match[2]
+    action = msg.match[3]
 
     results = chrono.parse(time)
 
@@ -57,7 +58,7 @@ module.exports = (robot) ->
       msg.send "can't parse #{time}"
       return
 
-    reminder = new ReminderAt msg.envelope, results[0].start.date(), action
+    reminder = new ReminderAt msg.envelope, mention, results[0].start.date(), action
 
     @robot.logger.debug results[0].start.date()
 
@@ -67,4 +68,4 @@ module.exports = (robot) ->
 
     reminders.queue reminder
 
-    msg.send "I'll remind you to #{action} at #{reminder.date.toLocaleString()}"
+    msg.send "I'll remind #{mention} to #{action} at #{reminder.date.toLocaleString()}"
