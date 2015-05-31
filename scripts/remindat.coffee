@@ -12,7 +12,7 @@ class Reminders
     @robot.brain.on 'loaded', =>
         reminder_at = @robot.brain.data.reminder_at
         for own id, o of reminder_at
-          reminder = new ReminderAt o.envelope, o.mention, new Date(o.date), o.action
+          reminder = new ReminderAt o.envelope, o.mention, new Date(o.date), o.time, o.action
           if reminder.diff() > 0
             @queue(reminder, id)
           else
@@ -27,7 +27,7 @@ class Reminders
 
     setTimeout =>
       target_user = if reminder.mention == 'me' then reminder.envelope.user.name else reminder.mention
-      @robot.send reminder.envelope, "I were asked to remind @#{target_user} to #{reminder.action}"
+      @robot.send reminder.envelope, "I were asked to remind @#{target_user} to #{reminder.action} at #{reminder.time}"
       @remove(id)
     , reminder.diff()
 
@@ -39,7 +39,7 @@ class Reminders
 
 class ReminderAt
 
-  constructor: (@envelope, @mention, @date, @action) ->
+  constructor: (@envelope, @mention, @date, @time, @action) ->
 
   diff: ->
     now = new Date().getTime()
@@ -59,7 +59,7 @@ module.exports = (robot) ->
       msg.send "can't parse #{time}"
       return
 
-    reminder = new ReminderAt msg.envelope, mention, results[0].start.date(), action
+    reminder = new ReminderAt msg.envelope, mention, results[0].start.date(), time, action
 
     @robot.logger.debug results[0].start.date()
 
