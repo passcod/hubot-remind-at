@@ -26,7 +26,8 @@ class Reminders
     @robot.logger.debug("add id:#{id}")
 
     setTimeout =>
-      @robot.send reminder.envelope, "@#{reminder.mention} asked me to remind you to #{reminder.action}"
+      target_user = if reminder.mention == 'me' then reminder.envelope.user.name else reminder.mention
+      @robot.send reminder.envelope, "I were asked to remind @#{target_user} to #{reminder.action}"
       @remove(id)
     , reminder.diff()
 
@@ -68,4 +69,5 @@ module.exports = (robot) ->
 
     reminders.queue reminder
 
-    msg.send "I'll remind #{mention} to #{action} at #{reminder.date.toLocaleString()}"
+    target_user = if mention == 'me' then 'you' else mention
+    msg.send "I'll remind #{target_user} to #{action} at #{reminder.date.toLocaleString()}"
