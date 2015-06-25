@@ -1,7 +1,7 @@
 # Description
 #   remind by natural language date for hubot
 # Commands
-#   hubot remind me at <time> to <action> - Set a reminder at <time> to do an <action> <time> is natural language date which chrono-node can parse
+#   hubot remind <me|username> at <time> to <action> - Set a reminder at <time> to do an <action> <time> is natural language date which chrono-node can parse
 
 chrono = require('chrono-node')
 uuid   = require('node-uuid')
@@ -12,7 +12,7 @@ class Reminders
     @robot.brain.on 'loaded', =>
         reminder_at = @robot.brain.data.reminder_at
         for own id, o of reminder_at
-          reminder = new ReminderAt o.envelope, new Date(o.date), o.action
+          reminder = new ReminderAt o.envelope, o.mention, new Date(o.date), o.time, o.action
           if reminder.diff() > 0
             @queue(reminder, id)
           else
@@ -26,7 +26,8 @@ class Reminders
     @robot.logger.debug("add id:#{id}")
 
     setTimeout =>
-      @robot.reply reminder.envelope, "you asked me to remind you to #{reminder.action}"
+      target_user = if reminder.mention == 'me' then reminder.envelope.user.name else reminder.mention
+      @robot.send reminder.envelope, "I were asked to remind @#{target_user} to #{reminder.action} at #{reminder.time}"
       @remove(id)
     , reminder.diff()
 
@@ -38,7 +39,7 @@ class Reminders
 
 class ReminderAt
 
-  constructor: (@envelope, @date, @action) ->
+  constructor: (@envelope, @mention, @date, @time, @action) ->
 
   diff: ->
     now = new Date().getTime()
@@ -47,9 +48,10 @@ class ReminderAt
 module.exports = (robot) ->
   reminders = new Reminders robot
 
-  robot.respond /remind me at (.+) to (.*)/i, (msg) ->
-    time = msg.match[1]
-    action = msg.match[2]
+  robot.respond /remind (.+) ((?:at|in|on).+) to (.*)/i, (msg) ->
+    mention = msg.match[1]
+    time = msg.match[2]
+    action = msg.match[3]
 
     results = chrono.parse(time)
 
@@ -57,7 +59,7 @@ module.exports = (robot) ->
       msg.send "can't parse #{time}"
       return
 
-    reminder = new ReminderAt msg.envelope, results[0].start.date(), action
+    reminder = new ReminderAt msg.envelope, mention, results[0].start.date(), time, action
 
     @robot.logger.debug results[0].start.date()
 
@@ -67,4 +69,5 @@ module.exports = (robot) ->
 
     reminders.queue reminder
 
-    msg.send "I'll remind you to #{action} at #{reminder.date.toLocaleString()}"
+    target_user = if mention == 'me' then 'you' else mention
+    msg.send "I'll remind #{target_user} to #{action} at #{reminder.date.toLocaleString()}"

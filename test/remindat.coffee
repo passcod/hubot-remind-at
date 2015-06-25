@@ -11,7 +11,7 @@ describe 'Reminder formats', ->
 
   it 'chrono formats specified with "at" are parsed', ->
     # Example taken from http://wanasit.github.io/pages/chrono/
-    room.user.say 'user', 'hubot remind me at Saturday, 17 August 2513 to do task'
+    room.user.say 'user', 'hubot remind test at Saturday, 17 August 2513 to do task'
     assert.deepEqual room.messages[1], [
-      "hubot", "I'll remind you to do task at Thu Aug 17 2513 12:00:00 GMT+0000 (UTC)"
+      "hubot", "I'll remind test to do task at Thu Aug 17 2513 12:00:00 GMT+0000 (UTC)"
     ]
